@@ -1,0 +1,4 @@
+numpy>=1.24
+pyyaml>=6.0
+certifi>=2024.0.0
+truststore>=0.9.1

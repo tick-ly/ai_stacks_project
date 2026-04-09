@@ -1,0 +1,4 @@
+version: 1
+display_name: AG Stacks + Papers
+short_description: Route by AG relevance, answer with Stacks + paper citations.
+default_prompt: Answer algebraic geometry questions with strict relevance routing, retrieve Stacks tags first, then supporting papers, and cite all key claims.

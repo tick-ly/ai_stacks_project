@@ -1,0 +1,92 @@
+{
+  "run_pipeline": {
+    "log_level": "INFO",
+    "workspace_root": ".",
+    "limit": 300,
+    "workers": 12,
+    "incremental": true,
+    "max_cache_age_hours": 168,
+    "provider": "hash",
+    "model": "hash-embedding-v1",
+    "dim": 1536,
+    "batch_size": 64,
+    "openai_base_url": "https://api.openai.com/v1",
+    "openai_timeout_seconds": 60,
+    "local_device": "cpu"
+  },
+  "fetch_api": {
+    "log_level": "INFO",
+    "tags_file": "data/raw/tags.csv",
+    "tags_url": "https://raw.githubusercontent.com/stacks/stacks-project/master/tags/tags",
+    "base_url": "https://stacks.math.columbia.edu",
+    "outdir": "data/raw/api/tags",
+    "workers": 12,
+    "max_cache_age_hours": 168,
+    "summary_file": "data/raw/api/fetch_summary.json",
+    "changed_tags_file": "data/raw/api/changed_tags.json"
+  },
+  "parse_tex": {
+    "log_level": "INFO",
+    "tags_file": "data/raw/tags.csv",
+    "makefile": "../stacks-project/Makefile",
+    "makefile_url": "https://raw.githubusercontent.com/stacks/stacks-project/master/Makefile",
+    "cache_makefile": "data/raw/stacks_makefile.cache",
+    "output": "data/processed/tag_metadata.jsonl",
+    "chapters_output": "data/processed/chapters.json"
+  },
+  "build_corpus": {
+    "log_level": "INFO",
+    "metadata": "data/processed/tag_metadata.jsonl",
+    "api_dir": "data/raw/api/tags",
+    "output": "data/processed/corpus.jsonl",
+    "edges_output": "data/processed/ref_edges.jsonl",
+    "changed_tags_file": "data/raw/api/changed_tags.json"
+  },
+  "build_embeddings": {
+    "log_level": "INFO",
+    "corpus": "data/processed/corpus.jsonl",
+    "output_dir": "data/index",
+    "provider": "hash",
+    "model": "hash-embedding-v1",
+    "dim": 1536,
+    "text_fields": "statement_text,normalized_text",
+    "batch_size": 64,
+    "changed_tags_file": "data/raw/api/changed_tags.json",
+    "openai_base_url": "https://api.openai.com/v1",
+    "openai_timeout_seconds": 60,
+    "local_device": "cpu"
+  },
+  "build_lexical_index": {
+    "log_level": "INFO",
+    "corpus": "data/processed/corpus.jsonl",
+    "output_db": "data/index/lexical.db",
+    "changed_tags_file": "data/raw/api/changed_tags.json"
+  },
+  "search_demo": {
+    "log_level": "INFO",
+    "index_dir": "data/index",
+    "corpus": "data/processed/corpus.jsonl",
+    "lexical_db": "data/index/lexical.db",
+    "top_k": 5,
+    "vector_k": 120,
+    "bm25_k": 120,
+    "vector_weight": 0.55,
+    "bm25_weight": 0.45
+  },
+  "eval_retrieval": {
+    "log_level": "INFO",
+    "queries": "config/eval_queries.sample.jsonl",
+    "index_dir": "data/index",
+    "corpus": "data/processed/corpus.jsonl",
+    "lexical_db": "data/index/lexical.db",
+    "k_values": "1,3,5,10",
+    "vector_k": 120,
+    "bm25_k": 120,
+    "vector_weight": 0.55,
+    "bm25_weight": 0.45,
+    "output": "data/eval/latest_metrics.json",
+    "baseline": "data/eval/baseline_metrics.json",
+    "regress_if_below": "mrr@10,recall@10",
+    "regression_tolerance": 0.0
+  }
+}

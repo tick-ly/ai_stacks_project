@@ -1,0 +1,12 @@
+# Exclude upstream Stacks sources per request
+stacks-project/
+
+# Exclude large generated datasets and indexes (regenerable)
+workspace/data/
+
+# Python caches
+**/__pycache__/
+*.pyc
+
+# Runtime temp outputs
+workspace/skills/ag-stacks-paper-assistant/tmp/

@@ -1,0 +1,5 @@
+{"id":"route_low_001","query":"Who won the NBA finals last season?","expected_relevance":"low","must_have":["route"],"must_not_have":["fake theorem","fabricated tag"]}
+{"id":"route_high_001","query":"Explain flat morphism of schemes and why Tor vanishing matters.","expected_relevance":"high","must_have":["stacks","citations"],"must_not_have":["fabricated"]}
+{"id":"route_medium_001","query":"What is the geometric meaning of Ext in deformation problems?","expected_relevance":"medium","must_have":["stacks"],"must_not_have":["fake paper"]}
+{"id":"citation_001","query":"State a clean definition of etale morphism and cite sources.","expected_relevance":"high","must_have":["[S1]"],"must_not_have":["without citation"]}
+{"id":"paper_001","query":"Recent directions on derived algebraic geometry and stacks.","expected_relevance":"high","must_have":["papers"],"must_not_have":["invented arxiv id"]}
