@@ -1,8 +1,12 @@
 # Exclude upstream Stacks sources per request
 stacks-project/
 
-# Exclude large generated datasets and indexes (regenerable)
-workspace/data/
+# Exclude data by default, then include only requested subsets
+workspace/data/*
+!workspace/data/processed/
+!workspace/data/processed/**
+!workspace/data/index/
+!workspace/data/index/**
 
 # Python caches
 **/__pycache__/

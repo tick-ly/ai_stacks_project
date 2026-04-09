@@ -1,0 +1,9 @@
+{
+  "provider": "hash",
+  "model": "hash-embedding-v1",
+  "dim": 1536,
+  "batch_size": 64,
+  "openai_base_url": "https://api.openai.com/v1",
+  "openai_timeout_seconds": 60,
+  "local_device": "cpu"
+}

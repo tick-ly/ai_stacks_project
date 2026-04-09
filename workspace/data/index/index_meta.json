@@ -1,0 +1,12 @@
+{
+  "provider": "hash",
+  "model": "hash-embedding-v1",
+  "dim": 1536,
+  "count": 21394,
+  "text_fields": [
+    "statement_text",
+    "normalized_text"
+  ],
+  "source_corpus": "data\\processed\\corpus.jsonl",
+  "incremental": false
+}
