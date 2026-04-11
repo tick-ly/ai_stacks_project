@@ -71,6 +71,20 @@ search_demo:
   bm25_k: 120
   vector_weight: 0.55
   bm25_weight: 0.45
+  graph_seed_k: 20
+  graph_hops: 2
+  graph_expand_k: 80
+  graph_weight: 0.35
+  graph_outgoing_weight: 1.0
+  graph_incoming_weight: 0.65
+  graph_hop_decay: 0.55
+  graph_centrality_weight: 0.10
+  statement_route_weight: 1.0
+  proof_route_weight: 1.0
+  statement_route_bonus: 0.12
+  proof_route_bonus: 0.45
+  proof_route_fallback_bonus: 0.10
+  nonproof_proof_penalty: 0.08
 
 eval_retrieval:
   log_level: INFO
@@ -83,7 +97,52 @@ eval_retrieval:
   bm25_k: 120
   vector_weight: 0.55
   bm25_weight: 0.45
+  graph_seed_k: 20
+  graph_hops: 2
+  graph_expand_k: 80
+  graph_weight: 0.35
+  graph_outgoing_weight: 1.0
+  graph_incoming_weight: 0.65
+  graph_hop_decay: 0.55
+  graph_centrality_weight: 0.10
+  statement_route_weight: 1.0
+  proof_route_weight: 1.0
+  statement_route_bonus: 0.12
+  proof_route_bonus: 0.45
+  proof_route_fallback_bonus: 0.10
+  nonproof_proof_penalty: 0.08
   output: data/eval/latest_metrics.json
   baseline: data/eval/baseline_metrics.json
   regress_if_below: mrr@10,recall@10
   regression_tolerance: 0.0
+
+run_retrieval_improvement:
+  log_level: INFO
+  workspace_root: .
+  queries: config/eval_queries.sample.jsonl
+  corpus: data/processed/corpus.jsonl
+  lexical_db: data/index/lexical.db
+  index_root: data/index_compare
+  report_dir: data/eval/improvement_runs
+  embedding_candidates_file: config/embedding_candidates.sample.json
+  route_grid_file: config/route_balance_grid.sample.json
+  skip_embedding_build: false
+  incremental: false
+  changed_tags_file: data/raw/api/changed_tags.json
+  batch_size: 64
+  k_values: 1,3,5,10
+  vector_k: 120
+  bm25_k: 120
+  vector_weight: 0.55
+  bm25_weight: 0.45
+  graph_seed_k: 20
+  graph_hops: 2
+  graph_expand_k: 80
+  graph_weight: 0.35
+  graph_outgoing_weight: 1.0
+  graph_incoming_weight: 0.65
+  graph_hop_decay: 0.55
+  graph_centrality_weight: 0.10
+  openai_base_url: https://api.openai.com/v1
+  openai_timeout_seconds: 60
+  local_device: cpu

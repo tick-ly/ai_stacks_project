@@ -91,6 +91,90 @@ def parse_args() -> argparse.Namespace:
         help="Weight for BM25 score in hybrid fusion.",
     )
     parser.add_argument(
+        "--graph-seed-k",
+        type=int,
+        default=int(cfg.get("graph_seed_k", 20)),
+        help="GraphRAG seed size from base ranking.",
+    )
+    parser.add_argument(
+        "--graph-hops",
+        type=int,
+        default=int(cfg.get("graph_hops", 2)),
+        help="Citation graph expansion hops.",
+    )
+    parser.add_argument(
+        "--graph-expand-k",
+        type=int,
+        default=int(cfg.get("graph_expand_k", 80)),
+        help="Max expanded docs taken from graph propagation.",
+    )
+    parser.add_argument(
+        "--graph-weight",
+        type=float,
+        default=float(cfg.get("graph_weight", 0.35)),
+        help="Weight of graph propagation score.",
+    )
+    parser.add_argument(
+        "--graph-outgoing-weight",
+        type=float,
+        default=float(cfg.get("graph_outgoing_weight", 1.0)),
+        help="Propagation weight on outgoing citation edges.",
+    )
+    parser.add_argument(
+        "--graph-incoming-weight",
+        type=float,
+        default=float(cfg.get("graph_incoming_weight", 0.65)),
+        help="Propagation weight on incoming citation edges.",
+    )
+    parser.add_argument(
+        "--graph-hop-decay",
+        type=float,
+        default=float(cfg.get("graph_hop_decay", 0.55)),
+        help="Per-hop decay for graph propagation.",
+    )
+    parser.add_argument(
+        "--graph-centrality-weight",
+        type=float,
+        default=float(cfg.get("graph_centrality_weight", 0.10)),
+        help="Weight of citation-centrality prior.",
+    )
+    parser.add_argument(
+        "--statement-route-weight",
+        type=float,
+        default=float(cfg.get("statement_route_weight", 1.0)),
+        help="Route weight for statement-oriented evidence.",
+    )
+    parser.add_argument(
+        "--proof-route-weight",
+        type=float,
+        default=float(cfg.get("proof_route_weight", 1.0)),
+        help="Route weight for proof-oriented evidence.",
+    )
+    parser.add_argument(
+        "--statement-route-bonus",
+        type=float,
+        default=float(cfg.get("statement_route_bonus", 0.12)),
+        help="Bonus for statement-rich docs when query is not proof intent.",
+    )
+    parser.add_argument(
+        "--proof-route-bonus",
+        type=float,
+        default=float(cfg.get("proof_route_bonus", 0.45)),
+        help="Bonus for docs with proof text when query wants proof.",
+    )
+    parser.add_argument(
+        "--proof-route-fallback-bonus",
+        type=float,
+        default=float(cfg.get("proof_route_fallback_bonus", 0.10)),
+        help="Fallback proof bonus for theorem/lemma/proposition docs without explicit proof text.",
+    )
+    parser.add_argument(
+        "--nonproof-proof-penalty",
+        type=float,
+        default=float(cfg.get("nonproof_proof_penalty", 0.08)),
+        help="Penalty for proof-heavy docs when query does not request proof.",
+    )
+    parser.add_argument(
         "--provider",
         type=str,
         default=str(cfg.get("provider", "")),
@@ -177,6 +261,20 @@ def main() -> int:
         bm25_weight=args.bm25_weight,
         chapter_filter=args.chapter,
         env_filter=args.env,
+        graph_seed_k=args.graph_seed_k,
+        graph_hops=args.graph_hops,
+        graph_expand_k=args.graph_expand_k,
+        graph_weight=args.graph_weight,
+        graph_outgoing_weight=args.graph_outgoing_weight,
+        graph_incoming_weight=args.graph_incoming_weight,
+        graph_hop_decay=args.graph_hop_decay,
+        graph_centrality_weight=args.graph_centrality_weight,
+        statement_route_weight=args.statement_route_weight,
+        proof_route_weight=args.proof_route_weight,
+        statement_route_bonus=args.statement_route_bonus,
+        proof_route_bonus=args.proof_route_bonus,
+        proof_route_fallback_bonus=args.proof_route_fallback_bonus,
+        nonproof_proof_penalty=args.nonproof_proof_penalty,
     )
     if not results:
         LOGGER.warning("No result. Try removing filters or rebuilding the index.")
@@ -211,4 +309,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

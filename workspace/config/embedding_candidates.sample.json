@@ -1,0 +1,23 @@
+[
+  {
+    "name": "hash_baseline",
+    "provider": "hash",
+    "model": "hash-embedding-v1",
+    "dim": 1536,
+    "text_fields": "statement_text,normalized_text"
+  },
+  {
+    "name": "local_minilm",
+    "provider": "local",
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "dim": 384,
+    "text_fields": "statement_text,normalized_text"
+  },
+  {
+    "name": "local_minilm_statement_only",
+    "provider": "local",
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "dim": 384,
+    "text_fields": "statement_text"
+  }
+]

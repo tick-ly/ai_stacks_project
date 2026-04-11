@@ -1,7 +1,15 @@
-# Gemini Gem 使用指导
+﻿# Gemini Gem 使用指导
 
 本目录用于把当前 AG Skill 迁移成 Gemini 的 Gem 配置。  
-目标是尽可能复现 Skill 的效果：先判相关性，再检索 Stacks/arXiv，再输出带引用回答。
+目标是尽可能复现 Skill 的效果：先判相关性，再检索 Stacks + 多源网页证据，再输出带引用回答。
+
+当前文档已对齐 Agent 改进版（v3）：
+
+- 相关性门控：`low` 时停止深答并给重述建议
+- 多源检索：`arXiv/OpenAlex/Semantic Scholar/Crossref/MathOverflow/Math StackExchange/Wikipedia`
+- 论文检索失败自动降级：继续 Stacks-only，不中断
+- Stacks 检索失败自动降级：继续 Web-only，并显式降低结论置信
+- 引用绑定：无证据不引用，不编造 `[P*]`
 
 ## 1. 文件说明
 
@@ -28,9 +36,16 @@
 - `workspace/ag提示词.md`
 - `workspace/skills/ag-stacks-paper-assistant/SKILL.md`
 
+推荐上传顺序：
+
+1. `AG_GEM_CORE_PROTOCOL.md`
+2. `AG_GEM_CITATION_POLICY.md`
+3. `AG_GEM_WEB_SEARCH_POLICY.md`
+4. `AG_GEM_EVAL_CHECKLIST.md`
+
 ## 3. 默认 arXiv 检索约束（建议保留）
 
-Gem 指令中应保留默认类别约束：
+Gem 指令中建议保留默认类别约束：
 
 - `math.AG OR math.AC OR math.RT OR math.NT OR math.KT OR math.RA OR math.AT`
 
@@ -38,7 +53,7 @@ Gem 指令中应保留默认类别约束：
 
 ## 4. 快速验收（上线前 5 分钟）
 
-建议用这 3 类问题做冒烟测试：
+建议用这 4 类问题做冒烟测试：
 
 1. 低相关：
 - `今天上海天气怎么样？`
@@ -50,7 +65,11 @@ Gem 指令中应保留默认类别约束：
 
 3. 研究导向：
 - `平坦态射近年的研究方向有哪些？`
-- 预期：有论文引用，且能区分基础事实与研究趋势。
+- 预期：有论文/网页引用，且能区分基础事实与研究趋势。
+
+4. 社区讨论导向：
+- `What are common intuitions for derived functors?`
+- 预期：可出现 MathOverflow / Math StackExchange 引用，但不会把讨论帖当成定理证明。
 
 ## 5. 常见问题
 
@@ -64,8 +83,13 @@ Gem 指令中应保留默认类别约束：
 - 在指令开头强化“先相关性判定，再回答”的顺序。
 - 增加“不相关时停止 AG 深答”的硬约束。
 
-如果论文质量偏弱：
+如果外部来源质量偏弱：
 
-- 在指令中强调“优先近期 + 至少 1 个基础来源”。
+- 在指令中强调“优先近期 + 至少 1 个基础来源 + 多源交叉”。
 - 明确要求给出标题、作者、年份、链接与相关性一句话。
 
+如果联网检索偶发失败：
+
+- 保持“Stacks 优先”回答链路，不要中断。
+- 在答案中增加简短 `Warning`，说明 Papers/Web 暂不可用。
+- 不要输出未核验的论文引用。

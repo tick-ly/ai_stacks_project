@@ -1,0 +1,38 @@
+[
+  {
+    "name": "route_default",
+    "statement_route_weight": 1.0,
+    "proof_route_weight": 1.0,
+    "statement_route_bonus": 0.12,
+    "proof_route_bonus": 0.45,
+    "proof_route_fallback_bonus": 0.1,
+    "nonproof_proof_penalty": 0.08
+  },
+  {
+    "name": "route_statement_focused",
+    "statement_route_weight": 1.2,
+    "proof_route_weight": 0.8,
+    "statement_route_bonus": 0.18,
+    "proof_route_bonus": 0.4,
+    "proof_route_fallback_bonus": 0.08,
+    "nonproof_proof_penalty": 0.12
+  },
+  {
+    "name": "route_proof_focused",
+    "statement_route_weight": 0.9,
+    "proof_route_weight": 1.25,
+    "statement_route_bonus": 0.08,
+    "proof_route_bonus": 0.55,
+    "proof_route_fallback_bonus": 0.14,
+    "nonproof_proof_penalty": 0.06
+  },
+  {
+    "name": "route_balanced_strict",
+    "statement_route_weight": 1.1,
+    "proof_route_weight": 1.1,
+    "statement_route_bonus": 0.14,
+    "proof_route_bonus": 0.5,
+    "proof_route_fallback_bonus": 0.12,
+    "nonproof_proof_penalty": 0.1
+  }
+]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 import tempfile
 import time
@@ -19,6 +20,7 @@ DEFAULT_USER_AGENT = (
 
 TAG_REF_RE = re.compile(r"/tag/([0-9A-Z]{4})")
 TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
+LOGGER = logging.getLogger("common")
 
 
 class _HTMLToText(HTMLParser):
@@ -50,17 +52,33 @@ def ensure_dir(path: Path) -> None:
 
 
 def atomic_write_text(path: Path, text: str, encoding: str = "utf-8") -> None:
-    ensure_dir(path.parent)
+    target = path.expanduser().resolve()
+    ensure_dir(target.parent)
     with tempfile.NamedTemporaryFile(
         mode="w",
         encoding=encoding,
         newline="\n",
         delete=False,
-        dir=str(path.parent),
+        dir=str(target.parent),
     ) as fh:
         fh.write(text)
         temp_name = fh.name
-    Path(temp_name).replace(path)
+
+    temp_path = Path(temp_name)
+    try:
+        temp_path.replace(target)
+    except OSError as exc:
+        LOGGER.warning(
+            "Atomic replace failed for %s; falling back to non-atomic write: %s",
+            target,
+            exc,
+        )
+        with target.open("w", encoding=encoding, newline="\n") as fh:
+            fh.write(text)
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            LOGGER.warning("Failed to remove temporary file after fallback: %s", temp_path)
 
 
 def read_jsonl(path: Path) -> Iterator[dict[str, Any]]:

@@ -8,6 +8,8 @@ This workspace now includes:
 - pluggable embedding providers (`hash`, `openai`, `local`)
 - lexical BM25 index via SQLite FTS5
 - hybrid retrieval (BM25 + vector fusion)
+- GraphRAG-style citation graph expansion and reranking
+- statement/proof route balancing controls in retrieval
 - retrieval evaluation (`Recall@K`, `MRR@K`) and regression baseline checks
 
 ## 1. Install
@@ -137,7 +139,32 @@ Override:
 python scripts/eval_retrieval.py --config config/pipeline.yaml --regress-if-below "mrr@5,recall@5"
 ```
 
-## 6. Logs
+## 6. One-Click Improvement Run (Item 5 + Item 6)
+
+This run automates:
+
+- embedding model comparison
+- statement/proof route-balance parameter sweep
+- ranking all combinations with a unified objective
+
+Run:
+
+```powershell
+python scripts/run_retrieval_improvement.py --config config/pipeline.yaml
+```
+
+Outputs:
+
+- `data/eval/improvement_runs/summary.json`
+- `data/eval/improvement_runs/summary.md`
+- per-combination eval JSON files in `data/eval/improvement_runs/`
+
+Candidate and route grids:
+
+- `config/embedding_candidates.sample.json`
+- `config/route_balance_grid.sample.json`
+
+## 7. Logs
 
 Each script uses structured timestamps and levels, for example:
 
@@ -151,7 +178,7 @@ Set verbosity:
 python scripts/run_pipeline.py --config config/pipeline.yaml --log-level DEBUG
 ```
 
-## 7. Main Outputs
+## 8. Main Outputs
 
 - `data/raw/tags.csv`
 - `data/raw/api/tags/<TAG>.json`
@@ -168,9 +195,12 @@ python scripts/run_pipeline.py --config config/pipeline.yaml --log-level DEBUG
 - `data/index/lexical.db`
 - `data/eval/latest_metrics.json`
 - `data/eval/baseline_metrics.json`
+- `data/eval/improvement_runs/summary.json`
+- `data/eval/improvement_runs/summary.md`
 
-## 8. Script Reference
+## 9. Script Reference
 
 - `scripts/runtime_utils.py`: config loader + logging setup
 - `scripts/retrieval_engine.py`: shared hybrid retrieval logic
 - `scripts/eval_retrieval.py`: metrics + regression checks
+- `scripts/run_retrieval_improvement.py`: one-click embedding+route optimization

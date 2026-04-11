@@ -1,7 +1,7 @@
 # AG Stacks Paper Assistant 使用指导
 
 本目录是“代数几何问答 + 引用”Skill 的实现。  
-它会先判断问题是否与代数几何相关，再做 Stacks 检索与 arXiv 检索，最后输出带引用的结构化结果。
+它会先判断问题是否与代数几何相关，再做 Stacks 检索与多源网页检索（arXiv/OpenAlex/Semantic Scholar/Crossref/MathOverflow/Math StackExchange/Wikipedia），最后输出带引用的结构化结果。
 
 ## 1. 目录结构
 
@@ -32,9 +32,9 @@ python skills\ag-stacks-paper-assistant\scripts\ag_assistant_pipeline.py --query
 输出 JSON 中重点字段：
 
 - `relevance.label`：`high / medium / low`
-- `route`：`ag_retrieval` 或 `low_relevance_stop`
+- `route`：`ag_retrieval / stacks_only_degraded / papers_only_degraded / retrieval_unavailable / low_relevance_stop`
 - `stacks.results`：Stacks 证据，含 tag 与 URL
-- `papers.results`：arXiv 证据
+- `papers.results`：多源网页证据
 - `citations.all_references`：可直接粘贴的引用列表
 
 ## 4. 分步调试命令
@@ -51,7 +51,7 @@ python skills\ag-stacks-paper-assistant\scripts\classify_relevance.py --query "E
 python skills\ag-stacks-paper-assistant\scripts\retrieve_stacks.py --query "flat morphism of schemes definition" --top-k 8
 ```
 
-仅查 arXiv（带默认类别约束）：
+仅查多源网页（默认含 arXiv）：
 
 ```powershell
 python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "flat morphism of schemes" --top-k 6
@@ -65,6 +65,18 @@ python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "flat
 
 ```powershell
 python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "derived stacks" --categories "math.AG,math.AT"
+```
+
+若要限制来源：
+
+```powershell
+python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "derived stacks" --sources "arxiv,openalex,semanticscholar" --per-source-k 10
+```
+
+也可显式启用社区问答源：
+
+```powershell
+python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "derived category t-structure intuition" --sources "mathoverflow,mathse,arxiv" --per-source-k 8
 ```
 
 ## 5. TLS 与网络排障
@@ -83,7 +95,9 @@ python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "deri
 ## 6. 结果判读与预期
 
 - 若输入低相关，系统应停止 AG 深答并提示重述。
-- 若 arXiv 超时/限流，主流程会降级为“仅 Stacks”，并在输出中给 `warnings`。
+- 若 Papers 侧超时/限流/TLS 异常，主流程降级为“仅 Stacks”，并在输出中给 `warnings`。
+- 若 Stacks 侧异常（索引缺失/脚本失败），主流程降级为“仅 Papers”，并在输出中给 `warnings`。
+- 若双侧均失败，返回 `retrieval_unavailable`，并显式说明证据缺口。
 - 基础性数学事实应优先由 Stacks 引用支撑。
 
 ## 7. 典型验收样例
@@ -98,4 +112,3 @@ python skills\ag-stacks-paper-assistant\scripts\ag_assistant_pipeline.py --query
 - `stacks.count > 0`
 - `citations.all_references` 非空
 - Stacks 引用链接形如 `https://stacks.math.columbia.edu/tag/<TAG>`
-

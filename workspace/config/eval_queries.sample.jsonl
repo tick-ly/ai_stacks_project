@@ -1,5 +1,100 @@
-{"id":"q1","query":"overview stacks project","relevant_tags":["0001"]}
-{"id":"q2","query":"set theory conventions","relevant_tags":["0004"],"chapter":"conventions"}
-{"id":"q3","query":"conventions section","relevant_tags":["0002"]}
-{"id":"q4","query":"comments conventions","relevant_tags":["0003"]}
-{"id":"q5","query":"introduction section phantom","relevant_tags":["0000"]}
+{"id": "q001", "query": "000B", "relevant_tags": ["000B"], "category": "tag_direct"}
+{"id": "q002", "query": "000C", "relevant_tags": ["000C"], "category": "tag_direct"}
+{"id": "q003", "query": "000E", "relevant_tags": ["000E"], "category": "tag_direct"}
+{"id": "q004", "query": "000F", "relevant_tags": ["000F"], "category": "tag_direct"}
+{"id": "q005", "query": "000G", "relevant_tags": ["000G"], "category": "tag_direct"}
+{"id": "q006", "query": "000H", "relevant_tags": ["000H"], "category": "tag_direct"}
+{"id": "q007", "query": "000I", "relevant_tags": ["000I"], "category": "tag_direct"}
+{"id": "q008", "query": "000J", "relevant_tags": ["000J"], "category": "tag_direct"}
+{"id": "q009", "query": "000O", "relevant_tags": ["000O"], "category": "tag_direct"}
+{"id": "q010", "query": "000P", "relevant_tags": ["000P"], "category": "tag_direct"}
+{"id": "q011", "query": "000Q", "relevant_tags": ["000Q"], "category": "tag_direct"}
+{"id": "q012", "query": "000R", "relevant_tags": ["000R"], "category": "tag_direct"}
+{"id": "q013", "query": "000S", "relevant_tags": ["000S"], "category": "tag_direct"}
+{"id": "q014", "query": "000T", "relevant_tags": ["000T"], "category": "tag_direct"}
+{"id": "q015", "query": "000U", "relevant_tags": ["000U"], "category": "tag_direct"}
+{"id": "q016", "query": "000V", "relevant_tags": ["000V"], "category": "tag_direct"}
+{"id": "q017", "query": "000W", "relevant_tags": ["000W"], "category": "tag_direct"}
+{"id": "q018", "query": "000X", "relevant_tags": ["000X"], "category": "tag_direct"}
+{"id": "q019", "query": "000Y", "relevant_tags": ["000Y"], "category": "tag_direct"}
+{"id": "q020", "query": "000Z", "relevant_tags": ["000Z"], "category": "tag_direct"}
+{"id": "q021", "query": "definition definitions", "relevant_tags": ["0013"], "category": "definition", "env": "definition"}
+{"id": "q022", "query": "definition category", "relevant_tags": ["0014"], "category": "definition", "env": "definition"}
+{"id": "q023", "query": "definition isomorphism", "relevant_tags": ["0017"], "category": "definition", "env": "definition"}
+{"id": "q024", "query": "definition groupoid", "relevant_tags": ["0018"], "category": "definition", "env": "definition"}
+{"id": "q025", "query": "definition functor", "relevant_tags": ["001B"], "category": "definition", "env": "definition"}
+{"id": "q026", "query": "definition faithful", "relevant_tags": ["001C"], "category": "definition", "env": "definition"}
+{"id": "q027", "query": "definition subcategory", "relevant_tags": ["001D"], "category": "definition", "env": "definition"}
+{"id": "q028", "query": "definition transformation functors", "relevant_tags": ["001I"], "category": "definition", "env": "definition"}
+{"id": "q029", "query": "definition equivalence", "relevant_tags": ["001J"], "category": "definition", "env": "definition"}
+{"id": "q030", "query": "definition product category", "relevant_tags": ["001K"], "category": "definition", "env": "definition"}
+{"id": "q031", "query": "definition opposite", "relevant_tags": ["001L"], "category": "definition", "env": "definition"}
+{"id": "q032", "query": "definition opposite", "relevant_tags": ["001M"], "category": "definition", "env": "definition"}
+{"id": "q033", "query": "definition contravariant", "relevant_tags": ["001N"], "category": "definition", "env": "definition"}
+{"id": "q034", "query": "definition representable functor", "relevant_tags": ["001Q"], "category": "definition", "env": "definition"}
+{"id": "q035", "query": "definition products pairs", "relevant_tags": ["001R"], "category": "definition", "env": "definition"}
+{"id": "q036", "query": "definition products", "relevant_tags": ["001S"], "category": "definition", "env": "definition"}
+{"id": "q037", "query": "definition has products pairs", "relevant_tags": ["001T"], "category": "definition", "env": "definition"}
+{"id": "q038", "query": "definition fibre products", "relevant_tags": ["001U"], "category": "definition", "env": "definition"}
+{"id": "q039", "query": "definition fibre products", "relevant_tags": ["001V"], "category": "definition", "env": "definition"}
+{"id": "q040", "query": "definition has fibre products", "relevant_tags": ["001W"], "category": "definition", "env": "definition"}
+{"id": "q041", "query": "theorem characterize proper", "relevant_tags": ["005R"], "category": "theorem", "env": "theorem"}
+{"id": "q042", "query": "proposition universal property localization", "relevant_tags": ["00CP"], "category": "theorem", "env": "proposition"}
+{"id": "q043", "query": "proposition localization exact", "relevant_tags": ["00CS"], "category": "theorem", "env": "proposition"}
+{"id": "q044", "query": "proposition localize quotient", "relevant_tags": ["00CT"], "category": "theorem", "env": "proposition"}
+{"id": "q045", "query": "theorem chevalley", "relevant_tags": ["00FE"], "category": "theorem", "env": "theorem"}
+{"id": "q046", "query": "theorem nullstellensatz", "relevant_tags": ["00FS"], "category": "theorem", "env": "theorem"}
+{"id": "q047", "query": "theorem uncountable nullstellensatz", "relevant_tags": ["00FU"], "category": "theorem", "env": "theorem"}
+{"id": "q048", "query": "theorem nullstellensatz", "relevant_tags": ["00FV"], "category": "theorem", "env": "theorem"}
+{"id": "q049", "query": "proposition jacobson permanence", "relevant_tags": ["00GB"], "category": "theorem", "env": "proposition"}
+{"id": "q050", "query": "proposition going down normal integral", "relevant_tags": ["00H8"], "category": "theorem", "env": "proposition"}
+{"id": "q051", "query": "proposition fppf open", "relevant_tags": ["00I1"], "category": "theorem", "env": "proposition"}
+{"id": "q052", "query": "proposition graded hilbert polynomial", "relevant_tags": ["00K1"], "category": "theorem", "env": "proposition"}
+{"id": "q053", "query": "proposition hilbert function polynomial", "relevant_tags": ["00K8"], "category": "theorem", "env": "proposition"}
+{"id": "q054", "query": "proposition dimension zero ring", "relevant_tags": ["00KJ"], "category": "theorem", "env": "proposition"}
+{"id": "q055", "query": "proposition dimension", "relevant_tags": ["00KQ"], "category": "theorem", "env": "proposition"}
+{"id": "q056", "query": "proposition what exact", "relevant_tags": ["00N1"], "category": "theorem", "env": "proposition"}
+{"id": "q057", "query": "proposition cm module", "relevant_tags": ["00N6"], "category": "theorem", "env": "proposition"}
+{"id": "q058", "query": "proposition regular finite gl dim", "relevant_tags": ["00O7"], "category": "theorem", "env": "proposition"}
+{"id": "q059", "query": "proposition finite gl dim regular", "relevant_tags": ["00OC"], "category": "theorem", "env": "proposition"}
+{"id": "q060", "query": "proposition finite gl dim polynomial ring", "relevant_tags": ["00OQ"], "category": "theorem", "env": "proposition"}
+{"id": "q061", "query": "proof of abelian injectives", "relevant_tags": ["0010"], "category": "proof"}
+{"id": "q062", "query": "proof of yoneda", "relevant_tags": ["001P"], "category": "proof"}
+{"id": "q063", "query": "proof of composition representable", "relevant_tags": ["001Y"], "category": "proof"}
+{"id": "q064", "query": "proof of base change representable", "relevant_tags": ["001Z"], "category": "proof"}
+{"id": "q065", "query": "proof of fibre product presheaves", "relevant_tags": ["0022"], "category": "proof"}
+{"id": "q066", "query": "proof of representable diagonal", "relevant_tags": ["0024"], "category": "proof"}
+{"id": "q067", "query": "proof of functorial colimit", "relevant_tags": ["002K"], "category": "proof"}
+{"id": "q068", "query": "proof of functorial limit", "relevant_tags": ["002L"], "category": "proof"}
+{"id": "q069", "query": "proof of colimits commute", "relevant_tags": ["002M"], "category": "proof"}
+{"id": "q070", "query": "proof of limits products equalizers", "relevant_tags": ["002N"], "category": "proof"}
+{"id": "q071", "query": "proof of finite limits exist", "relevant_tags": ["002O"], "category": "proof"}
+{"id": "q072", "query": "proof of colimits coproducts coequalizers", "relevant_tags": ["002P"], "category": "proof"}
+{"id": "q073", "query": "proof of colimits exist", "relevant_tags": ["002Q"], "category": "proof"}
+{"id": "q074", "query": "proof of initial", "relevant_tags": ["002R"], "category": "proof"}
+{"id": "q075", "query": "proof of connected limit x", "relevant_tags": ["002T"], "category": "proof"}
+{"id": "q076", "query": "proof of directed commutes", "relevant_tags": ["002W"], "category": "proof"}
+{"id": "q077", "query": "proof of split into directed", "relevant_tags": ["002X"], "category": "proof"}
+{"id": "q078", "query": "proof of almost directed commutes equalizers", "relevant_tags": ["002Y"], "category": "proof"}
+{"id": "q079", "query": "proof of directed category system", "relevant_tags": ["0032"], "category": "proof"}
+{"id": "q080", "query": "proof of characterize left exact", "relevant_tags": ["0035"], "category": "proof"}
+{"id": "q081", "query": "adequate quasi coherent", "relevant_tags": ["06US"], "category": "chapter_filter", "chapter": "adequate"}
+{"id": "q082", "query": "algebra localization", "relevant_tags": ["00CM"], "category": "chapter_filter", "chapter": "algebra"}
+{"id": "q083", "query": "algebraic stacks", "relevant_tags": ["026N"], "category": "chapter_filter", "chapter": "algebraic"}
+{"id": "q084", "query": "algebraization derived completion", "relevant_tags": ["0995"], "category": "chapter_filter", "chapter": "algebraization"}
+{"id": "q085", "query": "artin rs", "relevant_tags": ["06L9"], "category": "chapter_filter", "chapter": "artin"}
+{"id": "q086", "query": "bootstrap morphism representable spaces", "relevant_tags": ["02YP"], "category": "chapter_filter", "chapter": "bootstrap"}
+{"id": "q087", "query": "brauer algebras", "relevant_tags": ["073Y"], "category": "chapter_filter", "chapter": "brauer"}
+{"id": "q088", "query": "categories representable morphism", "relevant_tags": ["001X"], "category": "chapter_filter", "chapter": "categories"}
+{"id": "q089", "query": "chow determinants finite length", "relevant_tags": ["02P5"], "category": "chapter_filter", "chapter": "chow"}
+{"id": "q090", "query": "coherent cech quasi", "relevant_tags": ["01X8"], "category": "chapter_filter", "chapter": "coherent"}
+{"id": "q091", "query": "概形 scheme 的定义", "relevant_tags": ["0069"], "category": "chinese"}
+{"id": "q092", "query": "层 sheaf 的定义", "relevant_tags": ["006E"], "category": "chinese"}
+{"id": "q093", "query": "平坦 flat 态射 定义", "relevant_tags": ["00DJ"], "category": "chinese"}
+{"id": "q094", "query": "étale 态射 定义", "relevant_tags": ["00U0"], "category": "chinese"}
+{"id": "q095", "query": "代数栈 algebraic stack 定义", "relevant_tags": ["0266"], "category": "chinese"}
+{"id": "q096", "query": "余切 cotangent 相关 定义", "relevant_tags": ["00S0"], "category": "chinese"}
+{"id": "q097", "query": "上同调 cohomology 相关 定理", "relevant_tags": ["0116"], "category": "chinese"}
+{"id": "q098", "query": "除子 divisor 的定义", "relevant_tags": ["00LD"], "category": "chinese"}
+{"id": "q099", "query": "态射 morphism 的性质", "relevant_tags": ["003A"], "category": "chinese"}
+{"id": "q100", "query": "内射 injective 对象 相关 引理", "relevant_tags": ["007U"], "category": "chinese"}

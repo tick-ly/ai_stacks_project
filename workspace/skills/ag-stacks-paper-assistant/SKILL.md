@@ -37,6 +37,7 @@ Run `scripts/retrieve_stacks.py` with the user query.
 Default behavior:
 
 - use hybrid retrieval from local `data/index` and `data/processed/corpus.jsonl`
+- include GraphRAG-style citation-graph expansion to pull neighboring tags and rerank
 - return top results with `tag`, `title`, `reference`, `snippet`, and Stacks URL
 - assign citation ids as `[S1]`, `[S2]`, ...
 
@@ -51,8 +52,16 @@ Run `scripts/retrieve_papers.py` with the same query.
 
 Default behavior:
 
-- search arXiv via public API
-- return paper metadata and links
+- search multiple public web sources and fuse them:
+  - arXiv
+  - OpenAlex
+  - Semantic Scholar
+  - Crossref
+  - MathOverflow
+  - Math StackExchange
+  - Wikipedia (fallback context source)
+- deduplicate by DOI/arXiv ID/title and rerank merged results
+- return paper/web metadata and links
 - assign citation ids as `[P1]`, `[P2]`, ...
 - default to strict TLS verification
 - if SSL validation fails:
@@ -97,6 +106,12 @@ If evidence is weak:
 - explicitly state uncertainty
 - list what is missing
 - avoid fabricated theorem numbers, tags, or bibliography entries
+
+## Required Degradation Behavior
+
+- If paper/web retrieval fails, continue with Stacks-only answer and add warning.
+- If Stacks retrieval fails, continue with paper/web evidence and add warning.
+- If both fail, stop at evidence gap explanation and ask for narrowed query/source hints.
 
 ## References to Load On Demand
 
