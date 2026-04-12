@@ -33,6 +33,12 @@ Unless user overrides, constrain paper discovery to:
 - canonical URL
 - source/provenance
 
+## Retrieval Budgeting
+
+- First turn: retrieve only what is needed for the first closed unit.
+- Continuation turns: expand retrieval only for the next requested unit.
+- Avoid repeating broad search and full-source fusion every turn.
+
 ## Failure Handling
 
 If reliable papers/web evidence is not found:

@@ -11,6 +11,7 @@
 - Every nontrivial definition should cite source when available.
 - Trend/latest claims should cite papers or multi-source web evidence.
 - If papers/web are unavailable or unreliable, do not emit `[P*]` citations.
+- Across continuation turns, keep existing citation IDs stable when possible.
 
 ## Stacks Citation Format
 
@@ -53,3 +54,4 @@ Example:
 - Major claims should be followed by at least one matching citation.
 - Do not place unrelated references only at the end without mapping to claims.
 - When uncertain, mark the sentence as inference and cite supporting context if available.
+- If a later turn adds sources, append new IDs instead of renumbering old ones unless there is a strong reason.
