@@ -5,7 +5,8 @@ Toolkit and workflow assets for:
 - Stacks Project vectorization pipeline
 - AG retrieval and evaluation scripts
 - AG skill package
-- Gemini Gem templates and knowledge files
+- Gemini Gem templates and knowledge files, you can test at:
+- https://gemini.google.com/gem/1u-xtwhPV69k6PUFGiWADBds6f-0TwGny?usp=sharing
 
 ## Included
 
