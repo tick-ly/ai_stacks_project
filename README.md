@@ -34,19 +34,6 @@ Toolkit and workflow assets for:
 - Upgraded Gemini Gem package to align with current agent behavior (`gemini/` and `gemini/knowledge/`).
 - Added/updated retrieval improvement planning and risk documentation.
 
-## Recent Updates (2026-04-12)
-
-- Refactored Gemini Gem prompting toward continuation-first operation instead of one-shot long answers.
-- Integrated the slot-based retrieval skeleton:
-  - `定 / 判 / 例 / 反 / 联 / 用`
-- Added continuation-oriented knowledge docs:
-  - `AG_GEM_CONTINUATION_PROTOCOL.md`
-  - `AG_GEM_RETRIEVAL_TEMPLATE.md`
-- Updated the long AG prompt template to support:
-  - one closed reasoning unit per turn
-  - `CONTINUE_STATE` checkpoints
-  - stable slot-by-slot continuation instead of restarting from scratch
-
 ## License
 
 MIT. See `LICENSE`.
