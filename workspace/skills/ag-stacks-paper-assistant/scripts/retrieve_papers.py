@@ -80,6 +80,27 @@ AG_HINT_TERMS = (
     "上同调",
     "平坦",
 )
+FRESHNESS_HINT_TERMS = (
+    "latest",
+    "recent",
+    "state of the art",
+    "state-of-the-art",
+    "trend",
+    "trends",
+    "survey",
+    "surveys",
+    "survey paper",
+    "review",
+    "reading list",
+    "比较",
+    "进展",
+    "最新",
+    "最新进展",
+    "综述",
+    "发展",
+)
+RECENCY_WEIGHT_DEFAULT = 0.25
+RECENCY_WEIGHT_FRESHNESS = 0.40
 
 TITLE_NORMALIZE_RE = re.compile(r"[^a-z0-9]+")
 DOI_RE = re.compile(r"10\.\d{4,9}/[-._;()/:A-Z0-9]+", re.IGNORECASE)
@@ -305,6 +326,46 @@ def _build_web_query(query: str, use_ag_hint: bool) -> str:
     return query if _looks_ag_like(query) else f"{query} algebraic geometry"
 
 
+def _query_prefers_freshness(query: str) -> bool:
+    lowered = query.lower()
+    return any(term in lowered for term in FRESHNESS_HINT_TERMS)
+
+
+def _error_payload(code: str, message: str, details: str | None = None) -> dict[str, Any]:
+    err: dict[str, Any] = {"code": code, "message": message}
+    if details:
+        err["details"] = details
+    return {"error": err}
+
+
+def _error_code_for_exception(exc: Exception) -> str:
+    if isinstance(exc, json.JSONDecodeError):
+        return "PARSE_ERROR"
+    if _is_tls_error(exc):
+        return "TLS_ERROR"
+    if isinstance(exc, urllib.error.HTTPError):
+        return f"HTTP_{exc.code}"
+    if isinstance(exc, urllib.error.URLError):
+        return "URL_ERROR"
+    return "REQUEST_ERROR"
+
+
+def _degrade_reason_for_code(code: str, message: str = "") -> str:
+    code_upper = str(code).upper()
+    message_lower = str(message).lower()
+    if code_upper == "TLS_ERROR" or ("certificate" in message_lower and "verify" in message_lower):
+        return "tls_restricted"
+    if code_upper.startswith("HTTP_"):
+        status = code_upper.split("_", 1)[1]
+        if status in {"408", "429", "500", "502", "503", "504"}:
+            return "timeout"
+    if "timeout" in message_lower or "timed out" in message_lower:
+        return "timeout"
+    if code_upper in {"PARSE_ERROR", "PAPERS_PARSE_ERROR", "REQUEST_PARSE_ERROR"}:
+        return "parse_error"
+    return "error"
+
+
 def _canonical_doc_key(item: dict[str, Any]) -> str:
     doi = str(item.get("doi", "")).strip().lower()
     if doi:
@@ -358,7 +419,7 @@ def _recency_score(year: str) -> float:
     return 0.12
 
 
-def _score_item(item: dict[str, Any], query_tokens: set[str]) -> float:
+def _score_item(item: dict[str, Any], query_tokens: set[str], recency_weight: float) -> float:
     rank_signal = float(item.get("_rank_signal", 0.0))
     overlap = _token_overlap_score(
         title=str(item.get("title", "")),
@@ -366,10 +427,14 @@ def _score_item(item: dict[str, Any], query_tokens: set[str]) -> float:
         query_tokens=query_tokens,
     )
     recency = _recency_score(str(item.get("year", "")))
-    source_count = len(item.get("provenance", [])) if isinstance(item.get("provenance"), list) else 1
+    source_count = (
+        len(item.get("provenance", []))
+        if isinstance(item.get("provenance"), list)
+        else 1
+    )
     source_bonus = min(0.08 * float(source_count), 0.24)
     id_bonus = 0.08 if item.get("doi") or item.get("arxiv_id") else 0.0
-    return rank_signal + 0.45 * overlap + 0.25 * recency + source_bonus + id_bonus
+    return rank_signal + 0.45 * overlap + recency_weight * recency + source_bonus + id_bonus
 
 
 def _build_arxiv_query(query: str, categories: list[str]) -> str:
@@ -881,17 +946,23 @@ def aggregate_sources(
                     insecure_used = True
                     used_ssl = "insecure_fallback"
                 except Exception as insecure_exc:
+                    insecure_code = _error_code_for_exception(insecure_exc)
                     diagnostics[source] = {
                         "label": source_label,
                         "status": "error",
+                        "code": insecure_code,
+                        "degrade_reason": _degrade_reason_for_code(insecure_code, str(insecure_exc)),
                         "error": str(insecure_exc),
                         "count": 0,
                     }
                     continue
             else:
+                source_code = _error_code_for_exception(exc)
                 diagnostics[source] = {
                     "label": source_label,
                     "status": "error",
+                    "code": source_code,
+                    "degrade_reason": _degrade_reason_for_code(source_code, str(exc)),
                     "error": str(exc),
                     "count": 0,
                 }
@@ -902,6 +973,7 @@ def aggregate_sources(
             "status": "ok",
             "count": len(items),
             "ssl_mode": used_ssl,
+            "degrade_reason": "no_matches" if len(items) == 0 else None,
         }
 
         for rank, item in enumerate(items, start=1):
@@ -933,10 +1005,11 @@ def aggregate_sources(
                 merged[key] = candidate
 
     ranked: list[dict[str, Any]] = []
+    recency_weight = RECENCY_WEIGHT_FRESHNESS if _query_prefers_freshness(query) else RECENCY_WEIGHT_DEFAULT
     for item in merged.values():
         if not item.get("title") and not item.get("summary"):
             continue
-        item["_score"] = _score_item(item, query_tokens)
+        item["_score"] = _score_item(item, query_tokens, recency_weight)
         ranked.append(item)
 
     ranked.sort(key=lambda x: float(x.get("_score", 0.0)), reverse=True)
@@ -1031,56 +1104,100 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    args = parse_args()
+    try:
+        args = parse_args()
 
-    categories = _parse_categories(args.categories)
-    sources = _parse_sources(args.sources)
-    effective_query = _build_web_query(args.query, use_ag_hint=args.ag_query_hint)
-
-    results, diagnostics, insecure_used, ssl_mode = aggregate_sources(
-        query=effective_query,
-        categories=categories,
-        sources=sources,
-        top_k=max(1, args.top_k),
-        per_source_k=max(1, args.per_source_k),
-        timeout_seconds=max(5, args.timeout_seconds),
-        retries=max(1, args.retries),
-        ca_bundle=args.ca_bundle,
-        prefer_system_truststore=args.prefer_system_truststore,
-        allow_certifi_fallback=not args.no_certifi_fallback,
-        allow_insecure_ssl_fallback=args.allow_insecure_ssl_fallback,
-    )
-
-    warnings: list[str] = []
-    for source_key, info in diagnostics.items():
-        if not isinstance(info, dict):
-            continue
-        if info.get("status") == "error":
-            warnings.append(f"{source_key} failed: {info.get('error', 'unknown error')}")
-
-    payload = {
-        "query": args.query,
-        "effective_query": effective_query,
-        "count": len(results),
-        "sources": sources,
-        "categories": categories,
-        "insecure_ssl_fallback_used": insecure_used,
-        "ssl_mode": ssl_mode,
-        "source_breakdown": diagnostics,
-        "results": results,
-        **({"warnings": warnings} if warnings else {}),
-    }
-
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-            newline="\n",
+        categories = _parse_categories(args.categories)
+        sources = _parse_sources(args.sources)
+        effective_query = _build_web_query(args.query, use_ag_hint=args.ag_query_hint)
+        freshness_intent = _query_prefers_freshness(args.query)
+        recency_weight = (
+            RECENCY_WEIGHT_FRESHNESS if freshness_intent else RECENCY_WEIGHT_DEFAULT
         )
-    out = json.dumps(payload, ensure_ascii=False)
-    sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
-    return 0
+
+        results, diagnostics, insecure_used, ssl_mode = aggregate_sources(
+            query=effective_query,
+            categories=categories,
+            sources=sources,
+            top_k=max(1, args.top_k),
+            per_source_k=max(1, args.per_source_k),
+            timeout_seconds=max(5, args.timeout_seconds),
+            retries=max(1, args.retries),
+            ca_bundle=args.ca_bundle,
+            prefer_system_truststore=args.prefer_system_truststore,
+            allow_certifi_fallback=not args.no_certifi_fallback,
+            allow_insecure_ssl_fallback=args.allow_insecure_ssl_fallback,
+        )
+
+        warnings: list[dict[str, Any]] = []
+        for source_key, info in diagnostics.items():
+            if not isinstance(info, dict):
+                continue
+            if info.get("status") == "error":
+                warnings.append(
+                    {
+                        "source": source_key,
+                        "code": info.get("code", "REQUEST_ERROR"),
+                        "degrade_reason": _degrade_reason_for_code(
+                            info.get("code", "REQUEST_ERROR"),
+                            info.get("error", ""),
+                        ),
+                        "message": str(info.get("error", "unknown error")),
+                    }
+                )
+            elif info.get("status") == "ok" and int(info.get("count", 0) or 0) == 0:
+                warnings.append(
+                    {
+                        "source": source_key,
+                        "code": "NO_MATCHES",
+                        "degrade_reason": "no_matches",
+                        "message": f"{source_key} source returned no matches.",
+                    }
+                )
+
+        payload = {
+            "query": args.query,
+            "effective_query": effective_query,
+            "count": len(results),
+            "sources": sources,
+            "categories": categories,
+            "freshness_intent": freshness_intent,
+            "recency_weight": recency_weight,
+            "insecure_ssl_fallback_used": insecure_used,
+            "ssl_mode": ssl_mode,
+            "source_breakdown": diagnostics,
+            "results": results,
+            **({"warnings": warnings} if warnings else {}),
+        }
+
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+                newline="\n",
+            )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 0
+    except json.JSONDecodeError as exc:
+        payload = _error_payload(
+            code="PAPERS_PARSE_ERROR",
+            message="Failed to parse paper/web API response.",
+            details=str(exc),
+        )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 1
+    except Exception as exc:
+        payload = _error_payload(
+            code="PAPERS_RETRIEVAL_ERROR",
+            message="Failed to retrieve paper/web evidence.",
+            details=str(exc),
+        )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 1
 
 
 if __name__ == "__main__":

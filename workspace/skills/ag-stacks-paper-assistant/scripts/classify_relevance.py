@@ -55,6 +55,10 @@ NEGATIVE_HINTS = {
 TOKEN_RE = re.compile(r"[a-zA-Z0-9\-\+]+")
 
 
+def _degrade_reason_for_error() -> str:
+    return "error"
+
+
 def score_relevance(text: str) -> tuple[str, int, int]:
     q = text.lower()
     keyword_hits = 0
@@ -95,30 +99,44 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    args = parse_args()
-    label, k_hits, n_hits = score_relevance(args.query)
-    reason = (
-        f"keyword_hits={k_hits}, negative_hits={n_hits}. "
-        f"Relevance classified as {label}."
-    )
-    payload = {
-        "label": label,
-        "keyword_hits": k_hits,
-        "negative_hits": n_hits,
-        "reason": reason,
-        "query": args.query,
-    }
-
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-            newline="\n",
+    try:
+        args = parse_args()
+        label, k_hits, n_hits = score_relevance(args.query)
+        reason = (
+            f"keyword_hits={k_hits}, negative_hits={n_hits}. "
+            f"Relevance classified as {label}."
         )
-    out = json.dumps(payload, ensure_ascii=False)
-    sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
-    return 0
+        payload = {
+            "label": label,
+            "keyword_hits": k_hits,
+            "negative_hits": n_hits,
+            "reason": reason,
+            "query": args.query,
+        }
+
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+                newline="\n",
+            )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 0
+    except Exception as exc:
+        payload = {
+            "error": {
+                "code": "RELEVANCE_CLASSIFY_ERROR",
+                "message": "Failed to classify query relevance.",
+                "source": "relevance",
+                "degrade_reason": _degrade_reason_for_error(),
+                "details": str(exc),
+            }
+        }
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 1
 
 
 if __name__ == "__main__":

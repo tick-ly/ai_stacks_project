@@ -1,6 +1,17 @@
 # ai_stacks_project
 
-Toolkit and workflow assets for:
+## 项目介绍
+
+这是一个面向代数几何（Algebraic Geometry）问答的检索增强项目，目标是把本地 Stacks Project 知识与外部论文/讨论源统一到同一输出链路中，并为 Gemini 提供可控、可审计、可降级的证据来源。
+
+核心目标：
+
+- 在本地先做 Stacks 检索，再补充论文与 web 文献；  
+- 根据 `relevance` 与多源命中状态自动降级；  
+- 在证据不足时明确表达不确定性与 `degrade_reason`；  
+- 以统一模板/文档约束 Gemini 的回答风格与引用边界。
+
+## Toolkit scope
 
 - Stacks Project vectorization pipeline
 - AG retrieval and evaluation scripts

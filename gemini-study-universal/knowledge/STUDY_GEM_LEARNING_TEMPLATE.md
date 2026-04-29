@@ -1,4 +1,4 @@
-﻿# Study Gem Learning Template
+# Study Gem Learning Template
 
 Use these skeletons internally. Do not dump them as machine labels.
 
@@ -44,6 +44,13 @@ Visible section title suggestions:
 - 关键引理或关键变形
 - 技术难点
 - 结论与边界
+
+For proof-heavy material, make sure the visible answer covers:
+
+- why the proof strategy is chosen
+- where the hypotheses are used
+- at least one hidden intermediate step
+- what the result is used for next, when relevant
 
 ## D. Review Skeleton
 

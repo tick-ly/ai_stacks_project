@@ -32,6 +32,7 @@ Use this checklist to verify the Gem before real use.
 - Ask a large topic and force a stop:
   - Expected: ends with a natural-language next-step hint
   - Expected: no raw control tags
+  - Expected: the answer already forms one closed batch, not a teaser fragment
 
 ## F. Review Quality
 
@@ -53,3 +54,4 @@ Treat these as failures unless user explicitly asks for brevity:
 - title-only bibliography dump
 - raw continuation state leak
 - proof with no explanation of the main idea
+- chapter-style request answered as a tiny micro-slice with no stable next anchor

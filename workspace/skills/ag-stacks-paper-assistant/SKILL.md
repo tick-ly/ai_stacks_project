@@ -66,10 +66,13 @@ Default behavior:
 - deduplicate by DOI/arXiv ID/title and rerank merged results
 - return paper/web metadata and links
 - assign citation ids as `[P1]`, `[P2]`, ...
+- if query has explicit "latest"/"recent"/"survey"/"comparison" intent, the retriever increases paper recency weighting during rerank
 - default to strict TLS verification
 - if SSL validation fails:
   - first provide `--ca-bundle` or truststore/certifi chain
   - only then optionally use `--allow-insecure-ssl-fallback`, and disclose this in the answer
+- return `source_breakdown`: per-source diagnostic with fields `label/status/count/code/degrade_reason/ssl_mode/error`
+- append `warnings` for per-source errors/no-matches with canonical `degrade_reason`
 
 Use paper evidence to:
 
@@ -156,6 +159,17 @@ If evidence is weak:
 - If paper/web retrieval fails, continue with Stacks-only answer and add warning.
 - If Stacks retrieval fails, continue with paper/web evidence and add warning.
 - If both fail, stop at evidence gap explanation and ask for narrowed query/source hints.
+- Script-layer errors use a structured form: `{"error":{"code":"...", "message":"...", "details":"..."}}`, and orchestrator warnings should consume `code` for deterministic behavior.
+- Route-level degradations are standardized with `degrade_reason`:
+  - `tls_restricted` (certificate/ssl validation failure)
+  - `timeout` (request timeout / 429 / gateway errors)
+  - `parse_error` (failed to parse source response)
+  - `no_matches` (retrieval returns zero usable candidate)
+  - `error` (other fatal conditions)
+- Add top-level pipeline fields:
+  - `degradations`: list of failed sides (`stacks` / `papers` / `citations`)
+  - `source_confidence`: `0~1` evidence confidence score
+  - `evidence_quality`: `high / medium / low`
 
 ## References to Load On Demand
 

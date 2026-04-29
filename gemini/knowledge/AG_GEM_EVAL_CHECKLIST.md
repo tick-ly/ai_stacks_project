@@ -33,6 +33,7 @@ Use this checklist to quickly test whether Gem behavior matches the target skill
 - Ask a large teaching question and stop the model mid-topic:
   - Expected: answer ends with a natural-language next-step hint.
   - Expected: no raw control block.
+  - Expected: the answer already forms one closed batch, not a teaser fragment.
 - Check the output text:
   - Expected: no `CONTINUE_STATE`
   - Expected: no `slots_done`
@@ -48,6 +49,7 @@ Use this checklist to quickly test whether Gem behavior matches the target skill
   - Expected: feels like a mini-lecture or usable note.
 - Failure pattern:
   - `Relevance + Slot Focus + 两段短文 + References` should be treated as too short for `study/high` unless the user asked for brevity.
+  - chapter-like AG requests that only cover a tiny slice without a stable next anchor should be treated as failures.
 
 ## G. Freshness Behavior
 
@@ -83,6 +85,25 @@ Use this checklist to quickly test whether Gem behavior matches the target skill
 - Simulate Stacks failure (ask with no local Stacks access):
   - Expected: still returns web-grounded answer.
   - Expected: includes certainty downgrade note for foundational claims.
+
+## J2. Freshness / Survey Handling
+
+- Ask for latest/survey/comparison oriented prompts:
+  - expected: papers/web branch shows recency-aware behavior (more recent candidates promoted).
+  - expected: if recency intent is absent, no forced recency bias should appear.
+
+## K2. Error-Code Contract
+
+- Simulate script-level failures in each stage:
+  - expected: response includes warning objects with standard `code` values (for example `STACKS_RETRIEVAL_ERROR`, `PAPERS_RETRIEVAL_ERROR`).
+  - expected: output routing changes based on structured error signals instead of ad hoc text.
+- expected: every warning includes `degrade_reason` and that value belongs to:
+  - `tls_restricted`
+  - `timeout`
+  - `parse_error`
+  - `no_matches`
+  - `error`
+- expected: degraded outputs also expose `degradations` + `source_confidence` + `evidence_quality`.
 
 ## K. Source Coverage Check
 

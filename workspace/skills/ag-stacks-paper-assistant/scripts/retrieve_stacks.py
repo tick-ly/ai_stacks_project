@@ -118,109 +118,153 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _degrade_reason_for_code(code: str) -> str:
+    if code in {"TLS_ERROR", "TLS_RESTRICTED", "CERTIFICATE_ERROR"}:
+        return "tls_restricted"
+    if code.startswith("HTTP_"):
+        status = code.split("_", 1)[1]
+        if status in {"408", "429", "500", "502", "503", "504"}:
+            return "timeout"
+    if code in {"PARSE_ERROR", "STACKS_PARSE_ERROR"}:
+        return "parse_error"
+    return "error"
+
+
 def main() -> int:
-    args = parse_args()
-    root = _workspace_root()
+    try:
+        args = parse_args()
+        root = _workspace_root()
 
-    index_dir = args.index_dir if args.index_dir.is_absolute() else root / args.index_dir
-    corpus_path = args.corpus if args.corpus.is_absolute() else root / args.corpus
-    lexical_db = args.lexical_db if args.lexical_db.is_absolute() else root / args.lexical_db
+        index_dir = args.index_dir if args.index_dir.is_absolute() else root / args.index_dir
+        corpus_path = args.corpus if args.corpus.is_absolute() else root / args.corpus
+        lexical_db = args.lexical_db if args.lexical_db.is_absolute() else root / args.lexical_db
 
-    hybrid_search, load_corpus, load_vector_index, make_query_embedder, resolve_query_embedding_params = _load_engine()
+        (
+            hybrid_search,
+            load_corpus,
+            load_vector_index,
+            make_query_embedder,
+            resolve_query_embedding_params,
+        ) = _load_engine()
 
-    matrix, ids, index_meta, query_cfg = load_vector_index(index_dir)
-    corpus = load_corpus(corpus_path)
+        matrix, ids, index_meta, query_cfg = load_vector_index(index_dir)
+        corpus = load_corpus(corpus_path)
 
-    params = resolve_query_embedding_params(
-        index_meta=index_meta,
-        query_cfg=query_cfg,
-        provider_override=args.provider,
-        model_override=args.model,
-        dim_override=args.dim,
-        openai_base_url_override=args.openai_base_url,
-        openai_timeout_override=args.openai_timeout_seconds,
-        local_device_override=args.local_device,
-    )
-    embedder = make_query_embedder(
-        provider=params["provider"],
-        model=params["model"],
-        dim=params["dim"],
-        batch_size=params["batch_size"],
-        openai_base_url=params["openai_base_url"],
-        openai_api_key=args.openai_api_key or None,
-        openai_timeout_seconds=params["openai_timeout_seconds"],
-        local_device=params["local_device"],
-    )
+        params = resolve_query_embedding_params(
+            index_meta=index_meta,
+            query_cfg=query_cfg,
+            provider_override=args.provider,
+            model_override=args.model,
+            dim_override=args.dim,
+            openai_base_url_override=args.openai_base_url,
+            openai_timeout_override=args.openai_timeout_seconds,
+            local_device_override=args.local_device,
+        )
+        embedder = make_query_embedder(
+            provider=params["provider"],
+            model=params["model"],
+            dim=params["dim"],
+            batch_size=params["batch_size"],
+            openai_base_url=params["openai_base_url"],
+            openai_api_key=args.openai_api_key or None,
+            openai_timeout_seconds=params["openai_timeout_seconds"],
+            local_device=params["local_device"],
+        )
 
-    ranked = hybrid_search(
-        query=args.query,
-        matrix=matrix,
-        ids=ids,
-        corpus=corpus,
-        lexical_db=lexical_db,
-        embedder=embedder,
-        vector_k=args.vector_k,
-        bm25_k=args.bm25_k,
-        vector_weight=args.vector_weight,
-        bm25_weight=args.bm25_weight,
-        chapter_filter=args.chapter,
-        env_filter=args.env,
-        graph_seed_k=args.graph_seed_k,
-        graph_hops=args.graph_hops,
-        graph_expand_k=args.graph_expand_k,
-        graph_weight=args.graph_weight,
-        graph_outgoing_weight=args.graph_outgoing_weight,
-        graph_incoming_weight=args.graph_incoming_weight,
-        graph_hop_decay=args.graph_hop_decay,
-        graph_centrality_weight=args.graph_centrality_weight,
-        statement_route_weight=args.statement_route_weight,
-        proof_route_weight=args.proof_route_weight,
-        statement_route_bonus=args.statement_route_bonus,
-        proof_route_bonus=args.proof_route_bonus,
-        proof_route_fallback_bonus=args.proof_route_fallback_bonus,
-        nonproof_proof_penalty=args.nonproof_proof_penalty,
-    )
+        ranked = hybrid_search(
+            query=args.query,
+            matrix=matrix,
+            ids=ids,
+            corpus=corpus,
+            lexical_db=lexical_db,
+            embedder=embedder,
+            vector_k=args.vector_k,
+            bm25_k=args.bm25_k,
+            vector_weight=args.vector_weight,
+            bm25_weight=args.bm25_weight,
+            chapter_filter=args.chapter,
+            env_filter=args.env,
+            graph_seed_k=args.graph_seed_k,
+            graph_hops=args.graph_hops,
+            graph_expand_k=args.graph_expand_k,
+            graph_weight=args.graph_weight,
+            graph_outgoing_weight=args.graph_outgoing_weight,
+            graph_incoming_weight=args.graph_incoming_weight,
+            graph_hop_decay=args.graph_hop_decay,
+            graph_centrality_weight=args.graph_centrality_weight,
+            statement_route_weight=args.statement_route_weight,
+            proof_route_weight=args.proof_route_weight,
+            statement_route_bonus=args.statement_route_bonus,
+            proof_route_bonus=args.proof_route_bonus,
+            proof_route_fallback_bonus=args.proof_route_fallback_bonus,
+            nonproof_proof_penalty=args.nonproof_proof_penalty,
+        )
 
-    results = []
-    for i, (tag, hybrid_score, vec_score, bm25_score) in enumerate(ranked[: args.top_k], start=1):
-        row = corpus.get(tag, {})
-        snippet = str(row.get("statement_text", "")).replace("\n", " ").strip()
-        if len(snippet) > 260:
-            snippet = snippet[:257] + "..."
-        results.append(
-            {
-                "citation_id": f"S{i}",
-                "tag": tag,
-                "url": f"https://stacks.math.columbia.edu/tag/{tag}",
-                "title": row.get("title", ""),
-                "reference": row.get("reference", ""),
-                "env_type": row.get("env_type", ""),
-                "chapter_key": row.get("chapter_key", ""),
-                "snippet": snippet,
-                "scores": {
-                    "hybrid": hybrid_score,
-                    "vector": vec_score,
-                    "bm25": bm25_score,
-                },
+        results = []
+        for i, (tag, hybrid_score, vec_score, bm25_score) in enumerate(
+            ranked[: args.top_k], start=1
+        ):
+            row = corpus.get(tag, {})
+            snippet = str(row.get("statement_text", "")).replace("\n", " ").strip()
+            if len(snippet) > 260:
+                snippet = snippet[:257] + "..."
+            results.append(
+                {
+                    "citation_id": f"S{i}",
+                    "tag": tag,
+                    "url": f"https://stacks.math.columbia.edu/tag/{tag}",
+                    "title": row.get("title", ""),
+                    "reference": row.get("reference", ""),
+                    "env_type": row.get("env_type", ""),
+                    "chapter_key": row.get("chapter_key", ""),
+                    "snippet": snippet,
+                    "scores": {
+                        "hybrid": hybrid_score,
+                        "vector": vec_score,
+                        "bm25": bm25_score,
+                    },
+                }
+            )
+
+        payload = {
+            "query": args.query,
+            "count": len(results),
+            "results": results,
+        }
+
+        if len(results) == 0:
+            payload["warnings"] = [
+                {
+                    "source": "stacks",
+                    "code": "NO_MATCHES",
+                    "message": "Stacks retrieval returned no matches.",
+                    "degrade_reason": "no_matches",
+                }
+            ]
+
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+                newline="\n",
+            )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 0
+    except Exception as exc:
+        payload = {
+            "error": {
+                "code": "STACKS_RETRIEVAL_ERROR",
+                "message": "Failed to retrieve Stacks evidence.",
+                "source": "stacks",
+                "degrade_reason": _degrade_reason_for_code("STACKS_RETRIEVAL_ERROR"),
+                "details": str(exc),
             }
-        )
-
-    payload = {
-        "query": args.query,
-        "count": len(results),
-        "results": results,
-    }
-
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-            newline="\n",
-        )
-    out = json.dumps(payload, ensure_ascii=False)
-    sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
-    return 0
+        }
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 1
 
 
 if __name__ == "__main__":

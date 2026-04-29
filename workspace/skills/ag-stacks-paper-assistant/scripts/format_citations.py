@@ -58,29 +58,58 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _degrade_reason_for_code(code: str) -> str:
+    if code in {"PARSE_ERROR", "CITATION_PARSE_ERROR"}:
+        return "parse_error"
+    return "error"
+
+
 def main() -> int:
-    args = parse_args()
-    stacks = load_json(args.stacks_json).get("results", [])
-    papers = load_json(args.papers_json).get("results", [])
+    try:
+        args = parse_args()
+        stacks = load_json(args.stacks_json).get("results", [])
+        papers = load_json(args.papers_json).get("results", [])
 
-    stacks_refs = [format_stacks_item(x) for x in stacks]
-    paper_refs = [format_paper_item(x) for x in papers]
+        stacks_refs = [format_stacks_item(x) for x in stacks]
+        paper_refs = [format_paper_item(x) for x in papers]
 
-    payload = {
-        "stacks_references": stacks_refs,
-        "paper_references": paper_refs,
-        "all_references": stacks_refs + paper_refs,
-    }
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-            newline="\n",
-        )
-    out = json.dumps(payload, ensure_ascii=False)
-    sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
-    return 0
+        payload = {
+            "stacks_references": stacks_refs,
+            "paper_references": paper_refs,
+            "all_references": stacks_refs + paper_refs,
+        }
+        if len(stacks_refs) == 0 and len(paper_refs) == 0:
+            payload["warnings"] = [
+                {
+                    "source": "citations",
+                    "code": "NO_MATCHES",
+                    "message": "No citation content available to format.",
+                    "degrade_reason": "no_matches",
+                }
+            ]
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+                newline="\n",
+            )
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 0
+    except Exception as exc:
+        payload = {
+            "error": {
+                "code": "CITATION_FORMAT_ERROR",
+                "message": "Failed to format citation list.",
+                "source": "citations",
+                "degrade_reason": _degrade_reason_for_code("CITATION_FORMAT_ERROR"),
+                "details": str(exc),
+            }
+        }
+        out = json.dumps(payload, ensure_ascii=False)
+        sys.stdout.buffer.write((out + "\n").encode("utf-8", errors="replace"))
+        return 1
 
 
 if __name__ == "__main__":

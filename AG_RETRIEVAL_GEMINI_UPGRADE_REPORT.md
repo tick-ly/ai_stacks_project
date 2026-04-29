@@ -70,8 +70,7 @@ Skill 仍与现有数据集路径一致（已实测可检索）：
 - `gemini/GEM_填写模板.md`
 - `gemini/README.md`
 - `gemini/knowledge/AG_GEM_CORE_PROTOCOL.md`
-- `gemini/knowledge/AG_GEM_WEB_SEARCH_POLICY.md`
-- `gemini/knowledge/AG_GEM_CITATION_POLICY.md`
+- `gemini/knowledge/AG_GEM_RETRIEVAL_POLICY.md`
 - `gemini/knowledge/AG_GEM_EVAL_CHECKLIST.md`
 
 ---
@@ -148,3 +147,110 @@ python workspace\scripts\run_retrieval_improvement.py --config workspace\config\
 
 - 工作区中还有你之前已存在的其它改动（如 `workspace/scripts/retrieval_engine.py` 等）未被回滚，本次在其基础上继续增强 Skill 与 Gemini 对齐能力。
 - 本报告仅记录本轮与你目标直接相关的新增/调整。
+
+## 7. 2026-04-29 三项优化执行记录（按“最新/综述/比较提权 + 错误码统一 + 口径审计”）
+
+### 7.1 检索提示策略提权（papers 侧）
+
+- 已在 `retrieve_papers.py` 增加 freshness intent 检测：命中 `latest / recent / survey / comparison / 综述 / 最新 / 进展` 等词后，`_score_item` 使用更高时效权重。
+- 对应配置：
+  - 非该类意图：`recency_weight=0.25`
+  - 时效意图：`recency_weight=0.40`
+- 输出字段新增：
+  - `freshness_intent`
+  - `recency_weight`
+- 运行验证：
+  - `python workspace\skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "latest survey on derived stacks for moduli" --top-k 6`
+  - 结果确认 `freshness_intent=true` 且 `recency_weight` 变更生效。
+
+### 7.2 错误链路语义码统一
+
+- 已统一 `classify_relevance.py` / `retrieve_stacks.py` / `retrieve_papers.py` / `format_citations.py` 的失败返回为：
+  - `{"error": {"code": "...", "message": "...", "details": "..."}}`
+- `ag_assistant_pipeline.py` 的 `_run_json` 可：
+  - 解析子进程返回的标准错误负载；
+  - 统一降级为标准码（如 `PIPELINE_SUBPROCESS_ERROR`）；
+  - 将 warnings 改为结构化对象 `{source, code, message}`。
+- 验证示例：
+  - `python workspace\skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "x" --sources unknown`
+  - `python workspace\skills\ag-stacks-paper-assistant\scripts\ag_assistant_pipeline.py --query "flat morphism" --papers-sources "unknown"`
+  - 均能输出 `PAPERS_RETRIEVAL_ERROR`，并在 pipeline `warnings` 中保留 `code`。
+
+### 7.3 Gem 知识条目与脚本默认值口径审计
+
+- 先后完成了：
+  - 源顺序审计：`arXiv -> OpenAlex -> Semantic Scholar -> Crossref -> MathOverflow -> Math StackExchange -> Wikipedia`；
+  - 降级动作一致性：Stacks 优先；任一侧失败时回退到可用侧；双侧失败标记 `retrieval_unavailable`；
+  - 可选参数默认值核对：默认 `math.AG/math.AC/...` 类别约束、`arXiv` 默认检索行为、TLS 修复顺序与 fallback 标注。
+- 对齐产物：
+  - `gemini/knowledge/AG_GEM_RETRIEVAL_POLICY.md`（新增）
+  - `gemini/knowledge/AG_GEM_EVAL_CHECKLIST.md`（新增 `J2/K2` 验收项）
+  - `workspace/skills/ag-stacks-paper-assistant/README.md` 与 `SKILL.md`（补齐时效意图、结构化 warning）
+- 一致性结论：在已核对项中，Skill 的脚本默认行为与 Gem 规则基本一致，未发现阻塞性偏差。
+
+## 8. 2026-04-29 继续：并发安全与可观测性增强
+
+本轮聚焦“可重复执行、可观测、可审计”的主流程行为，补齐你要求的三项优化点。
+
+### 8.1 并发安全与幂等性
+
+- `ag_assistant_pipeline.py` 已将临时文件从固定名改为 `NamedTemporaryFile`，并使用每次运行的随机路径（`tmp/stacks_*.json`、`tmp/papers_*.json`）；
+- `tempfile` 文件在运行结束统一清理，避免多实例并发互相覆盖；
+- 未引用的临时文件不会影响返回结构。
+
+### 8.2 统一降级码（`degrade_reason`）
+
+- 新增统一语义码：
+  - `tls_restricted`
+  - `timeout`
+  - `parse_error`
+  - `no_matches`
+  - `error`
+- `retrieve_papers.py` 在每个来源和总错误上都返回 `degrade_reason`；
+- `ag_assistant_pipeline.py` 通过 `_build_degradation` / `_normalize_warning` 统一消费这些语义码；
+- 主返回中新增/保留 `warnings`（含 `source/code/message/degrade_reason`）与 `degradations`（结构化降级清单）。
+
+### 8.3 结果可解释性（证据质量字段）
+
+- pipeline 顶层新增字段：
+  - `source_confidence`（`0~1`）
+  - `evidence_quality`（`high / medium / low`）
+- 依据候选数、来源覆盖、SSL 回退与告警类型评分；
+- 建议 Gemini 层据此调整不确定性措辞。
+
+### 8.4 Gemini 与文档对齐
+
+已同步更新：
+
+- `workspace/skills/ag-stacks-paper-assistant/README.md`
+- `workspace/skills/ag-stacks-paper-assistant/SKILL.md`
+- `workspace/skills/ag-stacks-paper-assistant/references/web_search_policy.md`
+- `gemini/knowledge/AG_GEM_CORE_PROTOCOL.md`
+- `gemini/knowledge/AG_GEM_RETRIEVAL_POLICY.md`
+- `gemini/knowledge/AG_GEM_QUALITY_GUARDRAILS.md`
+- `gemini/knowledge/AG_GEM_EVAL_CHECKLIST.md`
+- `gemini/GEM_最终指令成稿_AG专用版.md`
+
+### 8.5 一键验证样例
+
+- `python workspace\\skills\\ag-stacks-paper-assistant\\scripts\\ag_assistant_pipeline.py --query \"What is a flat morphism of schemes?\" --stacks-top-k 3 --papers-top-k 2`
+- `python workspace\\skills\\ag-stacks-paper-assistant\\scripts\\ag_assistant_pipeline.py --query \"flat morphism\" --papers-sources unknown`
+- `python workspace\\skills\\ag-stacks-paper-assistant\\scripts\\retrieve_papers.py --query \"asdasdzzzznonexistentterm12345\" --top-k 3 --sources \"arxiv,mathoverflow\"`
+
+这三类命令已用于验证：
+
+- 结构化降级码（`degrade_reason`）是否持续；
+- 无匹配与部分来源错误是否正确回传；
+- `source_confidence / evidence_quality` 的输出是否稳定。
+
+### 8.6 继续补齐：子脚本输出标准化与警告源语义化（本次）
+
+- 已将 `classify_relevance.py` / `retrieve_stacks.py` / `format_citations.py` 的异常返回补齐为可消费字段：
+  - `source`（`relevance` / `stacks` / `citations`）
+  - `degrade_reason`（优先 `error` / `parse_error`）
+- `retrieve_stacks.py` 增加 `count==0` 时的 `warnings`，与主流程 `NO_MATCHES` 路径对齐。
+- `format_citations.py` 增加无引用时的 `NO_MATCHES` warning，便于 `citations` 侧降级可观测。
+- `ag_assistant_pipeline.py` 的 `_normalize_warning` 改为：
+  - 当子脚本返回 `source: *.py`（历史兼容）时，自动替换为 `stacks/papers/citations/relevance` 这类业务源；
+  - 保留子脚本显式语义 `source` 以兼容高优先级场景。
+- 这一步的目标是让 Gem 的规则引擎只依赖业务字段（`source` 与 `degrade_reason`）而非脚本名。

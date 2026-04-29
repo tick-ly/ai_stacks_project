@@ -35,7 +35,12 @@ python skills\ag-stacks-paper-assistant\scripts\ag_assistant_pipeline.py --query
 - `route`：`ag_retrieval / stacks_only_degraded / papers_only_degraded / retrieval_unavailable / low_relevance_stop`
 - `stacks.results`：Stacks 证据，含 tag 与 URL
 - `papers.results`：多源网页证据
+- `papers.source_breakdown`：每个来源的状态、错误码、计数、`degrade_reason`
 - `citations.all_references`：可直接粘贴的引用列表
+- `warnings`：结构化问题告警，含 `source`、`code`、`message`、`degrade_reason`
+- `degradations`：当前路由失效点汇总（如 `NO_MATCHES`、`PAPERS_RETRIEVAL_ERROR`）
+- `source_confidence`：证据置信度评分，范围 `0~1`
+- `evidence_quality`：证据质量等级，`high / medium / low`
 
 ## 4. 分步调试命令
 
@@ -79,6 +84,12 @@ python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "deri
 python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "derived category t-structure intuition" --sources "mathoverflow,mathse,arxiv" --per-source-k 8
 ```
 
+论文检索器支持“新进展/综述/比较”意图自动提权（`recency_weight` 输出会反映为更高权重）：
+
+```powershell
+python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "latest survey on derived stacks for moduli" --top-k 6
+```
+
 ## 5. TLS 与网络排障
 
 `retrieve_papers.py` 默认严格 TLS 校验，优先级如下：
@@ -95,9 +106,21 @@ python skills\ag-stacks-paper-assistant\scripts\retrieve_papers.py --query "deri
 ## 6. 结果判读与预期
 
 - 若输入低相关，系统应停止 AG 深答并提示重述。
-- 若 Papers 侧超时/限流/TLS 异常，主流程降级为“仅 Stacks”，并在输出中给 `warnings`。
+- 若 Papers 侧超时/限流/TLS 异常，主流程降级为“仅 Stacks”，并在输出中给 `warnings`（结构化 `source/code/message/degrade_reason`）。
 - 若 Stacks 侧异常（索引缺失/脚本失败），主流程降级为“仅 Papers”，并在输出中给 `warnings`。
-- 若双侧均失败，返回 `retrieval_unavailable`，并显式说明证据缺口。
+- 若双侧均失败，返回 `retrieval_unavailable`，并显式说明证据缺口；`evidence_quality` 通常为 `low`。
+- `degrade_reason` 统一语义建议：
+  - `tls_restricted`
+  - `timeout`
+  - `parse_error`
+  - `no_matches`
+  - `error`（兜底）
+
+对 `source_confidence` 的建议阅读：
+
+- `>= 0.75`：`high`，可支持较稳的基础说明
+- `0.45 ~ 0.74`：`medium`，建议标注边界并降低推断强度
+- `< 0.45`：`low`，需明显提示证据不足
 - 基础性数学事实应优先由 Stacks 引用支撑。
 
 ## 7. 典型验收样例
